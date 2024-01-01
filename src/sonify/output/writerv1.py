@@ -1,14 +1,16 @@
 import logging
 import wave
 import struct
-from .wavep import WaveProcessor
+from .iwriter import OutputWriter
+from ..wavep.iwavep import WaveProcessor
 
 
 _logger = logging.getLogger(__name__)
 
-class OutputWriter:
+class OutputWriterV1(OutputWriter):
     VERSION = 1
     def __init__(self) -> None:
+        super().__init__()
         self._num_channels = 1
 
     def save(self, wavp:WaveProcessor, sound_data:list[int], file_path:str):

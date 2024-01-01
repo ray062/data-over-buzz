@@ -1,5 +1,6 @@
 import logging
 import math
+from typing import Generator
 
 _logger = logging.getLogger(__name__)
 
@@ -16,8 +17,8 @@ class BitProcessor:
         _logger.debug(f"File bit number:{file_bits_number}")
         meta_bits = self._gen_meta_bits(frequency, reader_version, wave_version)
         header_bits = self._gen_header_bits(checksum, file_bits_number)
-        chunked_bits = self._chunknize(file_bits)
-        return meta_bits, f"{header_bits}{chunked_bits}"
+        chunked_bits_iter = self._chunknize_iter(file_bits)
+        return meta_bits, header_bits, chunked_bits_iter
 
     def _get_file_bits(self, file_obj)->str:
         _logger.debug("Start get_file_bits")
@@ -63,10 +64,9 @@ class BitProcessor:
         assert len(header_bits) == 100+7+32+32+32+32+64+64+7+7, f"Unexpected header bits length: {len(header_bits)}"
         return header_bits
     
-    def _chunknize(self, bits:str)->str:
+    def _chunknize_iter(self, bits:str)->Generator[str, None, None]:
         _logger.debug("Generating chunked bits...")
         file_bits_number = len(bits)
-        rlt = ""
         void = "0"*3
         start = "1"*3
         full_chunk_void = "0"*self._chunk_bit_size
@@ -77,5 +77,4 @@ class BitProcessor:
             if i == chunk_number - 1:
                 chunk_data = f"{chunk_data}{full_chunk_void}"[:self._chunk_bit_size] # complete the last chunk with zeros
             chunk_data = f"{void}{start}0{chunk_data}{void}"
-            rlt = f"{rlt}{chunk_data}"
-        return rlt
+            yield chunk_data
